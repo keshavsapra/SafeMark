@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SafeMark — Private, Encrypted Bookmark Vault</title>
+<meta name="description" content="SafeMark seals your bookmarks with AES-256-GCM encryption. Your password never leaves your head. Free, open-source, works in Chrome &amp; Brave.">
+<link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/logo-128.png">
+<style>
+  :root{
+    --bg:#070d1a;
+    --bg2:#0b1426;
+    --ink:#eef4ff;
+    --dim:#9db0cc;
+    --blue:#2f7cf6;
+    --blue2:#5aa9ff;
+    --glass:rgba(255,255,255,.055);
+    --glass-hi:rgba(255,255,255,.10);
+    --line:rgba(255,255,255,.09);
+    --radius:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  ::selection{background:rgba(47,124,246,.4)}
+
+  /* ambient glows */
+  .glow{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
+  .glow.b1{width:560px;height:560px;background:rgba(31,108,255,.16);top:-180px;left:-120px}
+  .glow.b2{width:480px;height:480px;background:rgba(74,158,255,.10);top:38%;right:-200px}
+  .glow.b3{width:420px;height:420px;background:rgba(31,108,255,.08);bottom:-160px;left:22%}
+
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* ── nav ── */
+  nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    background:rgba(7,13,26,.72);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex;align-items:center;gap:14px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:.2px;text-decoration:none;color:var(--ink)}
+  .brand img{width:30px;height:30px;border-radius:8px}
+  .brand b{color:var(--blue2);font-weight:700}
+  nav .links{margin-left:auto;display:flex;gap:26px}
+  nav .links a{color:var(--dim);text-decoration:none;font-size:14px;font-weight:600;transition:color .2s}
+  nav .links a:hover{color:var(--ink)}
+  nav .gh{display:flex;align-items:center;gap:7px;background:var(--glass);border:1px solid var(--line);padding:7px 14px;border-radius:99px;color:var(--ink);text-decoration:none;font-size:13px;font-weight:600;transition:.2s}
+  nav .gh:hover{background:var(--glass-hi)}
+  @media (max-width:720px){nav .links{display:none}}
+
+  /* ── hero ── */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding:76px 0 60px}
+  @media (max-width:900px){.hero{grid-template-columns:1fr;padding-top:48px;text-align:center}}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(47,124,246,.12);border:1px solid rgba(90,169,255,.28);
+    color:var(--blue2);font-size:12.5px;font-weight:700;letter-spacing:1.4px;
+    text-transform:uppercase;padding:7px 14px;border-radius:99px;margin-bottom:22px;
+  }
+  h1{font-size:clamp(38px,5.4vw,58px);line-height:1.06;letter-spacing:-1.5px;font-weight:800}
+  h1 .grad{background:linear-gradient(92deg,var(--blue),var(--blue2) 70%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p.lead{color:var(--dim);font-size:18px;margin:20px 0 30px;max-width:44ch}
+  @media (max-width:900px){.hero p.lead{margin-inline:auto}}
+  .cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:inherit}
+  @media (max-width:900px){.cta{justify-content:center}}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:14px 26px;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none;
+    transition:transform .16s, box-shadow .16s, background .16s;cursor:pointer;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,#2f7cf6,#5aa9ff);color:#fff;
+    box-shadow:0 10px 30px rgba(47,124,246,.38);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(47,124,246,.5)}
+  .btn-ghost{background:var(--glass);border:1px solid var(--line);color:var(--ink)}
+  .btn-ghost:hover{background:var(--glass-hi);transform:translateY(-2px)}
+  .meta-note{margin-top:16px;font-size:12.5px;color:#6f83a3}
+
+  /* ── vault mockup ── */
+  .mockup{
+    position:relative;padding:40px 26px;border-radius:28px;
+    background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+    border:1px solid var(--line);
+    box-shadow:0 40px 90px rgba(2,8,24,.55);
+    animation:float 7s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .panel-frame{
+    background:rgba(10,17,34,.75);border:1px solid var(--line);border-radius:18px;
+    padding:18px;backdrop-filter:blur(8px);
+  }
+  .panel-head{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .panel-head .dot{width:9px;height:9px;border-radius:50%}
+  .panel-title{font-size:12px;font-weight:700;color:var(--dim);letter-spacing:.6px;margin-left:4px}
+  .save-row{
+    display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:11px;
+    background:rgba(47,124,246,.13);border:1px solid rgba(90,169,255,.25);margin-bottom:14px;
+  }
+  .save-row svg{flex:none}
+  .save-row span{font-size:12px;color:#bcd3f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bm{display:flex;flex-direction:column;gap:9px}
+  .bmi{display:flex;gap:10px;align-items:center;background:var(--glass);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+  .bmi .fav{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex:none}
+  .bmi .t{font-size:13px;font-weight:600}
+  .bmi .u{font-size:11px;color:#71869f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge-float{
+    position:absolute;display:flex;align-items:center;gap:8px;
+    background:rgba(13,22,44,.82);border:1px solid rgba(90,169,255,.30);border-radius:14px;
+    padding:10px 15px;font-size:12.5px;font-weight:700;color:var(--ink);
+    backdrop-filter:blur(12px);box-shadow:0 18px 40px rgba(2,8,24,.5);
+  }
+  .bf.a{top:14px;right:-14px;animation:float 6s .8s ease-in-out infinite}
+  .bf.b{bottom:-18px;left:-14px;animation:float 7s .3s ease-in-out infinite}
+  .bf svg{flex:none}
+  @media (max-width:640px){.bf.a{right:6px}.bf.b{left:6px}}
+
+  /* ── trust strip ── */
+  .trust{display:flex;flex-wrap:wrap;gap:12px;padding:10px 0 70px}
+  .chip{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--glass);border:1px solid var(--line);border-radius:99px;
+    padding:9px 17px;font-size:13px;font-weight:600;color:#c6d5ee;
+  }
+  .chip b{color:var(--blue2)}
+
+  section{padding:64px 0}
+  .sec-head{text-align:center;max-width:640px;margin:0 auto 46px}
+  h2{font-size:clamp(28px,3.6vw,38px);letter-spacing:-.8px;font-weight:800;line-height:1.15}
+  .sec-head p{color:var(--dim);margin-top:12px;font-size:16.5px}
+
+  /* ── ciphertext reveal ── */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media (max-width:820px){.split{grid-template-columns:1fr}}
+  .cipher-card{
+    background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px;min-width:0;
+  }
+  .cipher-card h3{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px}
+  .cipher-card small{color:#71869f;font-size:12.5px}
+  pre.code{
+    margin-top:16px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;padding:15px 17px;overflow-x:auto;
+    font:12px/1.75 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#8fe3b4;
+  }
+  pre.code .red{color:#ff8f8f}
+  .safe-title{color:#8fe3b4}
+  .unsafe-title{color:#ff8f8f}
+
+  /* ── features grid ── */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:600px){.grid{grid-template-columns:1fr}}
+  .feat{
+    background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    border:1px solid var(--line);border-radius:var(--radius);padding:26px;
+    transition:transform .2s, border-color .2s;
+  }
+  .feat:hover{transform:translateY(-4px);border-color:rgba(90,169,255,.35)}
+  .feat .ico{
+    width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,rgba(47,124,246,.25),rgba(90,169,255,.10));
+    border:1px solid rgba(90,169,255,.3);margin-bottom:16px;
+  }
+  .feat h3{font-size:16.5px;font-weight:700;margin-bottom:7px}
+  .feat p{color:var(--dim);font-size:14.3px}
+
+  /* ── steps ── */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  @media (max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.steps{grid-template-columns:1fr}}
+  .step{background:var(--glass);border:1px solid var(--line);border-radius:var(--radius);padding:24px;position:relative}
+  .step .n{
+    width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:800;font-size:15px;margin-bottom:14px;
+  }
+  .step h3{font-size:15.5px;font-weight:700;margin-bottom:6px}
+  .step p{color:var(--dim);font-size:13.8px}
+  .step code{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);padding:2px 7px;border-radius:7px;font-size:12px;color:#bcd3f5}
+
+  /* ── privacy vault guarantee ── */
+  .guarantee{
+    text-align:center;border-radius:30px;padding:56px 30px;
+    background:linear-gradient(140deg,rgba(47,124,246,.16),rgba(10,17,34,.4));
+    border:1px solid rgba(90,169,255,.22);
+  }
+  .guarantee h2{font-size:clamp(26px,3.4vw,36px)}
+  .guarantee p{color:var(--dim);max-width:56ch;margin:14px auto 26px}
+
+  /* ── footer ── */
+  footer{border-top:1px solid var(--line);padding:38px 0 46px;text-align:center}
+  footer .fbrand{display:flex;align-items:center;justify-content:center;gap:10px;font-weight:700;margin-bottom:10px}
+  footer .fbrand img{width:26px;height:26px;border-radius:7px}
+  footer p{color:#6f83a3;font-size:13.5px}
+  .bmc{
+    display:inline-flex;align-items:center;gap:9px;margin-top:20px;
+    background:#ffdd00;color:#0b1426;font-weight:800;font-size:14px;
+    padding:12px 24px;border-radius:99px;text-decoration:none;transition:transform .16s, box-shadow .16s;
+  }
+  .bmc:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(255,221,0,.25)}
+  .frow{display:flex;justify-content:center;gap:22px;margin-top:18px}
+  .frow a{color:var(--dim);text-decoration:none;font-size:13.5px;font-weight:600}
+  .frow a:hover{color:var(--ink)}
+
+  /* reveal on scroll */
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease}
+  .rv.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="glow b1"></div><div class="glow b2"></div><div class="glow b3"></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/logo-128.png" alt=""><span>Safe<b>Mark</b></span></a>
+    <div class="links">
+      <a href="#privacy">Privacy</a><a href="#features">Features</a><a href="#install">Install</a><a href="#faq">FAQ</a>
+    </div>
+    <a class="gh" href="https://github.com/keshavsapra/SafeMark" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.24 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.7 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .3.21.66.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+      Open source
+    </a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div>
+      <span class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="#5aa9ff"><path d="M12 2 4 5v6c0 5.05 3.4 9.75 8 11 4.6-1.25 8-5.95 8-11V5l-8-3z"/></svg>
+        Chrome &amp; Brave · Manifest V3 · Open Source
+      </span>
+      <h1>Your bookmarks.<br><span class="grad">Nobody's business.</span></h1>
+      <p class="lead">
+        SafeMark locks your bookmark vault behind <b style="color:var(--ink)">AES-256-GCM</b> encryption.
+        Not even us — there's no server, no account, no telemetry. Only you hold the key.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/keshavsapra/SafeMark/releases/latest/download/SafeMark-1.6.1.zip">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
+          Download for Chrome &amp; Brave
+        </a>
+        <a class="btn btn-ghost" href="#install">How to install</a>
+      </div>
+      <div class="meta-note">Free forever · No sign-up · Your password never synced, never stored, never known</div>
+    </div>
+
+    <!-- vault mockup -->
+    <div class="mockup">
+      <div class="badge-float bf a">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="#5aa9ff"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 1 1 6 0v3H9z"/></svg>
+        AES-256-GCM sealed
+      </div>
+      <div class="badge-float bf b">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Password never leaves your head
+      </div>
+      <div class="panel-frame">
+        <div class="panel-head">
+          <span class="dot" style="background:#2f7cf6"></span>
+          <span class="panel-title">Safemark · Vault unlocked</span>
+        </div>
+        <div class="save-row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5C8 2 4 2.5 4 2.5v16s4-.5 8 2c4-2.5 8-2 8-2v-16S16 2 12 5z"/><path d="M12 5v15.5"/></svg>
+          <span>brave.com/privacy-features/…</span>
+        </div>
+        <div class="bm">
+          <div class="bmi"><span class="fav" style="background:linear-gradient(135deg,#1e6ff2,#5aa9ff)">N</span><div style="min-width:0"><div class="t">New Key Technology</div><div class="u">newkeytech.com/blog/zero-knowledge</div></div></div>
+          <div class="bmi"><span class="fav" style="background:linear-gradient(135deg,#7a5cff,#a78bfa)">P</span><div style="min-width:0"><div class="t">Private Shell Config</div><div class="u">github.com/…/privacy-guides</div></div></div>
+          <div class="bmi"><span class="fav" style="background:linear-gradient(135deg,#22c1a4,#5eead4)">S</span><div style="min-width:0"><div class="t">Signal — Security Notes</div><div class="u">signal.org/docs/personal-data</div></div></div>
+          <div class="bmi"><span class="fav" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)">W</span><div style="min-width:0"><div class="t">WireGuard Setup</div><div class="u">wireguard.com/quickstart</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TRUST STRIP ── -->
+  <div class="trust rv">
+    <span class="chip">🔒 <b>AES-256-GCM</b> at rest</span>
+    <span class="chip">🧬 <b>PBKDF2-SHA256</b> · 600,000 iterations</span>
+    <span class="chip">🚫 <b>Zero</b> telemetry</span>
+    <span class="chip">☁️ <b>Encrypted</b> sync across devices</span>
+    <span class="chip">📖 100% open source</span>
+  </div>
+
+  <!-- ── PRIVACY / WHAT A THIEF SEES ── -->
+  <section id="privacy">
+    <div class="sec-head rv">
+      <h2>Snoop through the storage.<br>See <span class="grad">nothing.</span></h2>
+      <p>Most "private" bookmark extensions just hide the list. SafeMark encrypts every byte. Here's the honest comparison of what anyone with file access actually finds:</p>
+    </div>
+    <div class="split">
+      <div class="cipher-card rv">
+        <h3><span class="unsafe-title">✕&ensp;Ordinary extension</span></h3>
+        <small>The whole vault, in the clear — one read and it's gone</small>
+        <pre class="code">
+<span class="red">"smBookmarks": [
+  { "title": "City Bank — Savings",
+    "url":   "https://citybank…/account/9941",
+    "added": 1729847 },
+  { "title": "Ex dating thread",
+    "url":   "https://reddit.com/r/…" }
+]</span></pre>
+      </div>
+      <div class="cipher-card rv">
+        <h3><span class="safe-title">✓&ensp;SafeMark</span></h3>
+        <small>Ciphertext only, chunked &amp; mirrored — mathematically useless without <i>your</i> password</small>
+        <pre class="code">
+"smMeta":  { "iv": "a3F9…", "rev": 7, "parts": 4 }
+"smHash":  "tude9lejfKy7EX8lCz…"
+"smVault0":"8kDXqzWf2nTvM0ytBv…"
+"smVault1":"J6rQeYwNp1aGhLxIo…"</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURES ── -->
+  <section id="features">
+    <div class="sec-head rv">
+      <h2>Built like the data matters.</h2>
+      <p>Because it does.</p>
+    </div>
+    <div class="grid">
+      <div class="feat rv">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Sealed before it touches disk</h3>
+        <p>Your password derives a 512-bit key through PBKDF2-SHA256 with 600,000 iterations. AES-256-GCM encrypts the vault. Brute force faces rate-limited lockout with exponential backoff.</p>
+      </div>
+      <div class="feat rv">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.6"/><path d="M12 16.5v2"/></svg></div>
+        <h3>The key stays in your head</h3>
+        <p>Nothing to recover, nothing to leak. The stored verifier only proves the right password was typed — the AES key itself is derived fresh, non-extractable, and lives in memory for seconds at a time.</p>
+      </div>
+      <div class="feat rv">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 0 4 4L8 20l-5 1 1-5z"/></svg></div>
+        <h3>Encrypted sync, done right</h3>
+        <p>Mirrors through Chrome/Brave Sync as ciphertext chunks — merge without ever exposing entries. Your bookmarks follow you across devices; your password does not.</p>
+      </div>
+      <div class="feat rv">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/><path d="M8 4V2M16 4V2"/></svg></div>
+        <h3>Docked side panel</h3>
+        <p>Open the vault where you browse — pinned to the right of the window. The "Bookmark this page" row follows your active tab live, one click to seal the page you're reading.</p>
+      </div>
+      <div class="feat rv">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10m0 0 5-5m-5 5-5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
+        <h3>Never locked in</h3>
+        <p>Export your whole vault to standard Netscape HTML — importable back into Chrome and Brave bookmarks, any day. No walled garden, no hostage-taking.</p>
+      </div>
+      <div class="feat rv">
+        <div class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5aa9ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 6l-2 12"/></svg></div>
+        <h3>Open source, auditable</h3>
+        <p>Every line of crypto and sync lives in a public repo you can read in an afternoon. No obfuscation, no black box, no "trust us."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INSTALL ── -->
+  <section id="install">
+    <div class="sec-head rv">
+      <h2>Install in 60 seconds.</h2>
+      <p>Chrome, Brave, Edge, and other Chromium browsers. No store approval queue — straight from GitHub.</p>
+    </div>
+    <div class="steps">
+      <div class="step rv"><div class="n">1</div><h3>Download &amp; unzip</h3><p>Grab the zip from <a href="https://github.com/keshavsapra/SafeMark/releases" target="_blank" rel="noopener" style="color:var(--blue2)">GitHub Releases</a> and extract it anywhere you like.</p></div>
+      <div class="step rv"><div class="n">2</div><h3>Open extensions</h3><p>Type <code>chrome://extensions</code> (or <code>brave://extensions</code>) in the address bar and enable <b>Developer mode</b>.</p></div>
+      <div class="step rv"><div class="n">3</div><h3>Load unpacked</h3><p>Click <b>Load unpacked</b> and select the unzipped <code>SafeMark</code> folder.</p></div>
+      <div class="step rv"><div class="n">4</div><h3>Seal it shut</h3><p>Pin the shield, click it, set your master password. From now on, it's the only key.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:36px" class="rv">
+      <a class="btn btn-primary" href="https://github.com/keshavsapra/SafeMark/releases/latest/download/SafeMark-1.6.1.zip">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
+        Download SafeMark v1.6.1
+      </a>
+    </div>
+  </section>
+
+  <!-- ── GUARANTEE ── -->
+  <section>
+    <div class="guarantee rv">
+      <h2>Forget the password &amp; the vault is <span class="grad">gone forever.</span></h2>
+      <p>That's not a limitation — it's the entire point. There is no back door, no email reset, no "recover my account" server, because there is no server. Only reinstalling wipes an <b style="color:var(--ink)">empty, locked vault.</b> Keep your password in your head — that's where the key lives.</p>
+      <a class="btn btn-ghost" href="#install">I understand — let's seal it</a>
+    </div>
+  </section>
+
+  <!-- ── FAQ ── -->
+  <section id="faq">
+    <div class="sec-head rv"><h2>Fair questions, straight answers.</h2></div>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+      <div class="feat rv"><h3>Can the developer read my bookmarks?</h3><p>No. There is no backend, no API, nothing calling home. The data exists only inside your browser profile — encrypted. The code that does it is public.</p></div>
+      <div class="feat rv"><h3>What does Sync actually send?</h3><p>Only ciphertext: salt, verifier, IV and encrypted chunks. Chrome/Brave Sync streams that between your devices; nobody along the way — including your browser vendor — sees a single bookmark in the clear.</p></div>
+      <div class="feat rv"><h3>I forgot my password. Now what?</h3><p>The vault is unrecoverable — permanently. That is by design: anything that could recover it could also be stolen. Reinstall to start fresh.</p></div>
+      <div class="feat rv"><h3>Does it slow my browser down?</h3><p>The key-stretching work runs once, at unlock. Browsing, saving and searching are instant.</p></div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="fbrand"><img src="assets/logo-128.png" alt="">SafeMark</div>
+  <p>Private bookmarks, sealed with math. Made for people who read the source.</p>
+  <a class="bmc" href="https://buymeacoffee.com/ar_kenny" target="_blank" rel="noopener">
+    ☕ Buy me a coffee
+  </a>
+  <div class="frow">
+    <a href="https://github.com/keshavsapra/SafeMark" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/keshavsapra/SafeMark/releases" target="_blank" rel="noopener">Releases</a>
+    <a href="https://buymeacoffee.com/ar_kenny" target="_blank" rel="noopener">Support the dev</a>
+  </div>
+  <p style="margin-top:14px">© 2026 SafeMark · AES-256-GCM · PBKDF2-SHA256 · 600k iterations</p>
+</footer>
+
+<script>
+  // reveal-on-scroll
+  const io = new IntersectionObserver((es) => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .12 });
+  document.querySelectorAll('.rv').forEach((el, i) => {
+    el.style.transitionDelay = (i % 4) * 70 + 'ms';
+    io.observe(el);
+  });
+</script>
+</body>
+</html>
