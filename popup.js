@@ -217,6 +217,39 @@ async function init() {
     const remain = await lockRemainingMs();
     if (remain > 0) showLockout(remain);
   }
+
+  await showPanelNotice();
+}
+
+/* ── docked-panel failure notice ──
+ * If the Side Panel couldn't open (background stores the reason in
+ * smPanelErr), the fallback tab says why instead of just appearing. */
+async function showPanelNotice() {
+  if (!HAS_API || typeof document === "undefined") return;
+  try {
+    const { smPanelErr } = await chrome.storage.local.get("smPanelErr");
+    if (!smPanelErr) return;
+
+    const app = document.querySelector(".app");
+    if (!app || document.querySelector(".panel-note")) return;
+
+    const esc = (s) => String(s).replace(/[<>&]/g, (c) =>
+      ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]));
+
+    const note = document.createElement("div");
+    note.className = "panel-note";
+    note.innerHTML =
+      '<div class="pn-text"><b>⚠️ Docked panel couldn\'t open — showing in a tab instead.</b><br>' +
+      '<span class="pn-reason">reason: ' + esc(smPanelErr) + "</span><br>" +
+      "In Brave, enable <b>Settings → Appearance → Show sidebar</b> (or open " +
+      "<code>brave://settings/sidebar</code>), then click the Safemark shield again.</div>" +
+      '<button class="pn-dismiss" title="Dismiss">✕</button>';
+    note.querySelector(".pn-dismiss").addEventListener("click", () => {
+      try { void chrome.storage.local.remove("smPanelErr"); } catch {}
+      note.remove();
+    });
+    app.prepend(note);
+  } catch {}
 }
 
 /* ═════════ SYNC ═════════ */

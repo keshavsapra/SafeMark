@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Safemark — Private Bookmark Vault",
   "short_name": "Safemark",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "A password-shielded, AES-encrypted bookmark vault — 600k-iteration key stretching, syncs via Brave/Chrome Sync (password never syncs).",
   "action": {
     "default_title": "Safemark — Private Bookmark Vault",

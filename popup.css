@@ -321,3 +321,33 @@ a.bm-info { text-decoration: none; color: inherit; }
   animation: toastIn 0.2s ease;
 }
 @keyframes toastIn { from { opacity: 0; bottom: 8px; } }
+
+/* ── panel-unavailable notice (fallback tab) ── */
+.panel-note {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 170, 60, .10);
+  border: 1px solid rgba(255, 170, 60, .35);
+  font-size: 12.5px; line-height: 1.55;
+  color: #ffd9a8;
+}
+.panel-note .pn-text { min-width: 0; flex: 1; }
+.panel-note b { color: #ffca7a; }
+.panel-note .pn-reason {
+  display: block; margin: 4px 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11px; color: #c9b9a4;
+  word-break: break-word;
+}
+.panel-note code {
+  background: rgba(0,0,0,.35); padding: 1px 6px; border-radius: 6px;
+  font-size: 11px;
+}
+.panel-note .pn-dismiss {
+  flex: none; width: 24px; height: 24px; border-radius: 8px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  color: #ffd9a8; cursor: pointer; font-size: 12px;
+}
+.panel-note .pn-dismiss:hover { background: rgba(255,255,255,.16); }

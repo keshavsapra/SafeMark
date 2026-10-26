@@ -2,7 +2,21 @@
 """E2E test Safemark v1.5 — Brave/Chrome Sync integration of the vault."""
 import asyncio, json, http.client, time, websockets
 
-EXT = "chrome-extension://mdlgpdkhfnlafabmklfmhlhoimoeeenk/"
+PORT = 9333
+
+def _ext_id():
+    for _ in range(20):
+        try:
+            conn = http.client.HTTPConnection("127.0.0.1", PORT)
+            conn.request("GET", "/json")
+            targets = json.loads(conn.getresponse().read())
+            sw = next(t for t in targets if t["type"] == "service_worker")
+            return sw["url"].split("/")[2]
+        except Exception:
+            import time as _t; _t.sleep(0.5)
+    raise RuntimeError("no service worker target on CDP port")
+
+EXT = "chrome-extension://" + _ext_id() + "/"
 PORT = 9333
 
 class CDP:

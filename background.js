@@ -16,7 +16,8 @@ function clearErr() {
 
 /* last-resort: a normal browser tab. Always works. */
 function openAsTab(reason) {
-  rememberErr("side panel unavailable — " + reason + " — opened in a tab");
+  const detail = "side panel unavailable — " + reason + " — opened in a tab";
+  rememberErr(detail);
   try { void chrome.tabs.create({ url: chrome.runtime.getURL(PANEL_PATH) }); } catch {}
 }
 
@@ -39,7 +40,10 @@ async function openPanel(tab) {
       clearErr();
       return;
     } catch (e2) {
-      openAsTab(e1?.message || e2?.message || "unknown error");
+      openAsTab(
+        "windowId-open: " + (e1?.message || String(e1)) +
+        " | tabId-open: " + (e2?.message || String(e2))
+      );
     }
   }
 }
