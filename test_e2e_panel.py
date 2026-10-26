@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 """E2E test Safemark v1.6 — Side Panel + live tab tracking in the save bar."""
-import asyncio, json, http.client, time, websockets
+import asyncio, json, http.client, websockets
 
-EXT = "chrome-extension://mdlgpdkhfnlafabmklfmhlhoimoeeenk/"
 PORT = 9333
+
+def _ext_id():
+    conn = http.client.HTTPConnection("127.0.0.1", PORT)
+    conn.request("GET", "/json")
+    sw = next(t for t in json.loads(conn.getresponse().read())
+              if t["type"] == "service_worker")
+    return sw["url"].split("/")[2]
+
+EXT = "chrome-extension://" + _ext_id() + "/"
 
 class CDP:
     def __init__(self, ws):

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Package SafeMark into dist/SafeMark-<version>.zip.
+# Package SafeMark into dist/SafeMark.zip (fixed name so the
+# "releases/latest/download/SafeMark.zip" homepage link never breaks).
 # Zip contents live inside a top-level "SafeMark-<version>/" folder so
 # extraction produces exactly one folder — point "Load unpacked" at it.
 set -euo pipefail
@@ -7,7 +8,7 @@ cd "$(dirname "$0")"
 
 VERSION=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
 NAME="SafeMark-${VERSION}"
-OUT="dist/${NAME}.zip"
+OUT="dist/SafeMark.zip"
 mkdir -p dist
 rm -f "$OUT"
 
