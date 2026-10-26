@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
-# Package SafeMark into dist/SafeMark-v<version>.zip (the exact folder users load unpacked)
+# Package SafeMark into dist/SafeMark-<version>.zip.
+# Zip contents live inside a top-level "SafeMark-<version>/" folder so
+# extraction produces exactly one folder — point "Load unpacked" at it.
 set -euo pipefail
 cd "$(dirname "$0")"
 
 VERSION=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
-OUT="dist/SafeMark-v${VERSION}.zip"
+NAME="SafeMark-${VERSION}"
+OUT="dist/${NAME}.zip"
 mkdir -p dist
 rm -f "$OUT"
 
-zip -r "$OUT" \
-  manifest.json background.js popup.html popup.css popup.js icons/
+STAGE=$(mktemp -d)
+trap 'rm -rf "$STAGE"' EXIT
+mkdir -p "$STAGE/$NAME"
+cp -r manifest.json background.js popup.html popup.css popup.js icons "$STAGE/$NAME/"
 
-echo "built $OUT"
+( cd "$STAGE" && zip -qr "$OLDPWD/$OUT" "$NAME" )
+
+echo "built $OUT (contents inside $NAME/)"

@@ -61,7 +61,7 @@ python3 test_e2e_sync.py    # 29 checks — crypto, sync, migrations
 python3 test_e2e_panel.py   # 11 checks — side panel + live tab tracking
 
 # package a release zip
-./build.sh                  # → dist/SafeMark-v<version>.zip
+./build.sh                  # → dist/SafeMark-<version>.zip
 ```
 
 ## Homepage
