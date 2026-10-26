@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Safemark — Private Bookmark Vault",
   "short_name": "Safemark",
-  "version": "1.6.3",
+  "version": "1.7.0",
   "description": "A password-shielded, AES-encrypted bookmark vault — 600k-iteration key stretching, syncs via Brave/Chrome Sync (password never syncs).",
   "action": {
     "default_title": "Safemark — Private Bookmark Vault",
@@ -11,6 +11,9 @@
       "32": "icons/icon32.png",
       "48": "icons/icon48.png"
     }
+  },
+  "side_panel": {
+    "default_path": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
@@ -21,7 +24,7 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["storage", "tabs", "activeTab", "system.display", "sidePanel"],
+  "permissions": ["storage", "tabs", "activeTab", "sidePanel"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self'; img-src 'self' https: data:"
   }

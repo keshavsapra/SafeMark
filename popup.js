@@ -540,6 +540,24 @@ function renderBookmarkList() {
   $("empty-state").classList.toggle("hidden", list.length > 0);
 }
 
+/* deterministic pastel palette for bookmark avatars */
+const AVATAR_COLORS = [
+  ["#F59E0B","#000"], // amber
+  ["#10B981","#000"], // emerald
+  ["#3B82F6","#fff"], // blue
+  ["#8B5CF6","#fff"], // violet
+  ["#EF4444","#fff"], // red
+  ["#EC4899","#fff"], // pink
+  ["#06B6D4","#000"], // cyan
+  ["#F97316","#000"], // orange
+];
+
+function avatarColor(host) {
+  let h = 0;
+  for (let i = 0; i < host.length; i++) h = (h * 31 + host.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
 function bmRow(bm) {
   const li = document.createElement("li");
   li.className = "bm";
@@ -549,6 +567,9 @@ function bmRow(bm) {
   let host = "•";
   try { host = new URL(bm.url).hostname.replace(/^www\./, ""); } catch {}
   const letter = (host[0] || "•").toUpperCase();
+  const [bg, fg] = avatarColor(host);
+  fav.style.background = bg;
+  fav.style.color = fg;
 
   if (bm.favicon) {
     const img = document.createElement("img");
@@ -641,17 +662,22 @@ async function getSourceTab() {
   return null;
 }
 
-/* ── lock & exit closes the Side Panel ── */
+/* ── lock & exit ── */
 async function lockAndExit() {
   window.__vault = null;
   window.__aesKey = null;
-  if (HAS_API && chrome.sidePanel?.setOptions) {
-    try {
-      // no windowId here — some Brave builds reject the property
-      await chrome.sidePanel.setOptions({ enabled: false });
-    } catch {}
+  window.__salt = null;
+  window.__rev = 0;
+  // Show the gate view instead of trying to close (side panels don't close via window.close())
+  if (HAS_API) {
+    const store = await chrome.storage.local.get(["smOnboarded", "smSalt", "smHash"]);
+    if (store.smOnboarded && store.smSalt && store.smHash) {
+      $("gate-pass").value = "";
+      $("gate-error").classList.add("hidden");
+      show("view-gate");
+      setTimeout(() => $("gate-pass").focus(), 50);
+    }
   }
-  window.close(); // no-op for a docked panel; keeps behaviour when testing as tab
 }
 
 /* ── export (Netscape bookmarks HTML — importable into any browser) ── */
