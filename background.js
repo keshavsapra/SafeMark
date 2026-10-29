@@ -1,7 +1,4 @@
-/* ═════════ Safemark · service worker ═════════
- * Opens the vault as a docked Side Panel on icon click.
- * Chrome 116+: setPanelBehavior opens it automatically.
- * Older Chrome: onClicked fallback via sidePanel.open(). */
+/* ═════════ Safemark · service worker ═════════ */
 
 const PANEL_PATH = "popup.html";
 
@@ -10,7 +7,7 @@ try {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 } catch {}
 
-/* Fallback for older Chrome builds that don't support setPanelBehavior */
+/* Fallback for older Chrome */
 chrome.action.onClicked.addListener(async (tab) => {
   try {
     await chrome.sidePanel.open({ windowId: tab.windowId });
@@ -20,5 +17,12 @@ chrome.action.onClicked.addListener(async (tab) => {
     } catch {
       chrome.tabs.create({ url: chrome.runtime.getURL(PANEL_PATH) });
     }
+  }
+});
+
+/* Keyboard shortcut: Ctrl+Shift+S → tell the panel to save current page */
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "save-page") {
+    chrome.runtime.sendMessage({ type: "shortcut-save-page" }).catch(() => {});
   }
 });

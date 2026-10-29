@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Safemark — Private Bookmark Vault",
   "short_name": "Safemark",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "A password-shielded, AES-encrypted bookmark vault — 600k-iteration key stretching, syncs via Brave/Chrome Sync (password never syncs).",
   "action": {
     "default_title": "Safemark — Private Bookmark Vault",
@@ -24,7 +24,16 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["storage", "tabs", "activeTab", "sidePanel"],
+  "permissions": ["storage", "tabs", "activeTab", "sidePanel", "clipboardWrite"],
+  "commands": {
+    "save-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Save current page to Safemark vault"
+    }
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self'; img-src 'self' https: data:"
   }
