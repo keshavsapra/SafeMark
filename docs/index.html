@@ -516,6 +516,53 @@
   }
   .foot-links a:hover { color: var(--text); }
 
+  /* ── SCREENSHOTS ── */
+  .shots-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 820px) { .shots-grid { grid-template-columns: 1fr; } }
+
+  .shot {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s;
+  }
+  .shot:hover { border-color: var(--amber); }
+  .shot-wide {
+    grid-column: 1 / -1;
+  }
+  .shot-label {
+    padding: 10px 16px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: var(--amber);
+    border-bottom: 1px solid var(--border);
+    background: #0d0d0d;
+    font-family: ui-monospace, monospace;
+  }
+  .shot img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: top;
+  }
+  .shot-caption {
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: var(--mid);
+    line-height: 1.55;
+    border-top: 1px solid var(--border);
+    background: #0d0d0d;
+  }
+
   /* ── SCROLL REVEAL ── */
   .rv {
     opacity: 0;
@@ -537,6 +584,7 @@
     <div class="nav-links">
       <a href="#privacy">Privacy</a>
       <a href="#features">Features</a>
+      <a href="#screenshots">Screenshots</a>
       <a href="#install">Install</a>
       <a href="#faq">FAQ</a>
     </div>
@@ -554,7 +602,7 @@
     <div>
       <span class="kicker">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="#F59E0B"><path d="M12 2 4 5v6c0 5.05 3.4 9.75 8 11 4.6-1.25 8-5.95 8-11V5l-8-3z"/></svg>
-        Chrome &amp; Brave · v1.7.0 · Side Panel · Open Source
+        Chrome &amp; Brave · v1.8.0 · Side Panel · Open Source
       </span>
       <h1>Your bookmarks.<br><span class="amber">Nobody's business.</span></h1>
       <p class="lead">
@@ -767,6 +815,31 @@
     </div>
   </section>
 
+  <!-- SCREENSHOTS SECTION -->
+  <section id="screenshots">
+    <div class="sec-head rv">
+      <h2>See how it <span class="amber">looks.</span></h2>
+      <p>Sharp, dark, minimal — designed to stay out of your way while keeping your data locked tight.</p>
+    </div>
+    <div class="shots-grid">
+      <div class="shot rv">
+        <div class="shot-label">Lock screen</div>
+        <img src="assets/screenshots/main.png" alt="SafeMark lock screen — password gate" loading="lazy" />
+        <p class="shot-caption">Terminal-style password gate. Monospace font, amber CTA, zero fluff.</p>
+      </div>
+      <div class="shot rv">
+        <div class="shot-label">Vault</div>
+        <img src="assets/screenshots/bookmarks.png" alt="SafeMark vault with bookmarks" loading="lazy" />
+        <p class="shot-caption">Encrypted bookmarks with sort, search, tags, and one-click save.</p>
+      </div>
+      <div class="shot rv shot-wide">
+        <div class="shot-label">Docked side panel</div>
+        <img src="assets/screenshots/overview.png" alt="SafeMark docked as a side panel in Chrome" loading="lazy" />
+        <p class="shot-caption">Pinned to the right of your browser window — always one click away, never in the way.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- FAQ SECTION -->
   <section id="faq">
     <div class="sec-head rv"><h2>Fair questions,<br>straight answers.</h2></div>
@@ -795,7 +868,7 @@
     <a href="https://buymeacoffee.com/ar_kenny" target="_blank" rel="noopener">Support the dev</a>
   </div>
   <p style="margin-top:14px;font-family:ui-monospace,monospace;font-size:11px">
-    © 2026 SafeMark · v1.7.0 · AES-256-GCM · PBKDF2-SHA256 · 600k iterations
+    © 2026 SafeMark · v1.8.0 · AES-256-GCM · PBKDF2-SHA256 · 600k iterations
   </p>
 </footer>
 
